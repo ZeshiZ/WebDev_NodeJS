@@ -98,3 +98,16 @@ June 25, 2022
 Zeshi
 Difficulties
 - Admin back-end: doctor availabilities
+
+June 26, 2022
+
+Jeorge
+Done
+- Patient homepage
+- Booking page
+- Doctor homepage
+To Do
+- Doctor add notes
+- Admin doctor scheduling
+Difficulties
+- Automatic checking of time
