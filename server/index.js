@@ -6,6 +6,7 @@ const cors = require("cors");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
+const e = require("express");
 
 const saltRounds = 10;
 
@@ -16,7 +17,7 @@ const db = mysql.createPool({
   host: "localhost",
   user: "root",
   password: "admin123",
-  database: "theclinic",
+  database: "clinic",
 });
 
 app.use(
@@ -30,27 +31,117 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get("/api/appointments", authenticateToken, (req, res) => {
-  // const id = req.user.id;
-  // const sqlAll = "SELECT * FROM appointments WHERE patientId = ?";
-  // db.query(sqlAll, [id], (err, result) => {
-  //   if (err) console.log(err);
-  //   res.send(result);
-  // });
+  const id = req.user.id;
+  console.log(req.user);
+
+  let sqlAll =
+    "SELECT appointments.*, users.name FROM appointments LEFT JOIN users ON doctor_id = users.id WHERE patient_id = ? ORDER BY schedule_date DESC";
+
+  if (req.user.role === "doctor") {
+    sqlAll =
+      "SELECT appointments.*, users.name FROM appointments LEFT JOIN users ON patient_id = users.id WHERE doctor_id = ? ORDER BY schedule_date DESC";
+  }
+
+  db.query(sqlAll, [id], (err, result) => {
+    if (err) console.log(err);
+    res.send(result);
+  });
+});
+
+app.get("/api/appointments/:schedule", authenticateToken, (req, res) => {
+  const id = req.user.id;
+  const schedule = req.params.schedule;
+
+  let sqlSelect =
+    "SELECT appointments.*, users.name FROM appointments LEFT JOIN users ON doctor_id = users.id WHERE patient_id = ? and schedule_date = ? ORDER BY schedule_date DESC";
+
+  if (req.user.role === "doctor") {
+    sqlSelect =
+      "SELECT appointments.*, users.name FROM appointments LEFT JOIN users ON patient_id = users.id WHERE doctor_id = ? and schedule_date = ? ORDER BY schedule_date DESC";
+  }
+
+  db.query(sqlSelect, [id, schedule], (err, result) => {
+    if (err) console.log(err);
+    res.send(result);
+  });
+});
+
+app.put("/api/appointments", authenticateToken, (req, res) => {
+  const id = req.user.id;
+  const schedule = req.body.schedule;
+  const notes = req.body.notes;
+
+  if (req.user.role !== "doctor") return;
+
+  const sqlUpdate =
+    "UPDATE appointments SET notes = ? WHERE doctor_id = ? and schedule_date = ?";
+
+  db.query(sqlUpdate, [notes, id, schedule], (err, result) => {
+    if (err) console.log(err);
+    res.send(result);
+  });
 });
 
 app.post("/api/appointments", authenticateToken, (req, res) => {
   const id = req.user.id;
-  const task = req.body.task;
-  const dueDate = req.body.dueDate;
-  const isDone = false;
+  const schedule = req.body.schedule;
+  const doctor = req.body.doctor;
+  const reason = req.body.reason;
 
   const sqlInsert =
-    "INSERT INTO todos (ownerId, task, dueDate, isDone) VALUES (?, ?, ?, ?)";
+    "INSERT INTO appointments (doctor_id, schedule_date, patient_id, reason) VALUES (?, ?, ?, ?)";
 
-  db.query(sqlInsert, [id, task, dueDate, isDone], (err, result) => {
+  const sqlUpdate =
+    "UPDATE schedules SET available = 0 WHERE doctor_id = ? and  schedule_date = ?";
+
+  db.query(sqlUpdate, [doctor, schedule], (err, result) => {
+    if (err) console.log(err);
+  });
+
+  db.query(sqlInsert, [doctor, schedule, id, reason], (err, result) => {
     if (err) console.log(err);
     res.send(result);
   });
+});
+
+app.get("/api/schedules/:id", authenticateToken, (req, res) => {
+  const id = req.params.id;
+
+  const sqlAll =
+    "SELECT * FROM schedules WHERE DATEDIFF(schedule_date, now()) >= 0 and doctor_id = ?;";
+
+  db.query(sqlAll, [id], (err, result) => {
+    if (err) console.log(err);
+    res.send(result);
+  });
+});
+
+app.post("/api/schedules", authenticateToken, (req, res) => {
+  const doctorId = req.body.doctorId;
+  const schedules = req.body.schedules;
+
+  if (!doctorId || !schedules) {
+    return;
+  }
+
+  const sqlDelete =
+    "DELETE FROM schedules WHERE DATEDIFF(schedule_date, now()) >= 0 and doctor_id = ?;";
+  const sqlInsert =
+    "INSERT INTO schedules (doctor_id, schedule_date, available) values (?, ?, ?)";
+
+  db.query(sqlDelete, [doctorId], (err, result) => {
+    if (err) console.log(err);
+
+    schedules.forEach((sched) => {
+      db.query(sqlInsert, [doctorId, sched, 1], (err, result) => {
+        if (err) {
+          console.log(err);
+        }
+      });
+    });
+  });
+
+  res.send();
 });
 
 app.post("/api/todos/:id", authenticateToken, (req, res) => {
@@ -63,6 +154,32 @@ app.post("/api/todos/:id", authenticateToken, (req, res) => {
     if (err) console.log(err);
     res.send(result);
   });
+});
+
+app.get("/api/users/:role", (req, res) => {
+  const role = req.params.role;
+
+  if (role) {
+    const sqlSelect = "SELECT * FROM users WHERE role = ?";
+
+    db.query(sqlSelect, [role], (err, result) => {
+      if (err) {
+        console.log(err);
+        res.send({ err: err });
+      }
+      res.send(result);
+    });
+  } else {
+    const sqlSelect = "SELECT * from users";
+
+    db.query(sqlSelect, (err, result) => {
+      if (err) {
+        console.log(err);
+        res.send({ err: err });
+      }
+      res.send(result);
+    });
+  }
 });
 
 app.post("/api/register", (req, res) => {
@@ -86,11 +203,11 @@ app.post("/api/register", (req, res) => {
 });
 
 app.post("/api/login", (req, res) => {
-  const name = req.body.name;
+  const email = req.body.email;
   const password = req.body.password;
-  const sqlLogin = "SELECT * FROM users WHERE name = ?";
+  const sqlLogin = "SELECT * FROM users WHERE email = ?";
 
-  db.query(sqlLogin, [name], (err, result) => {
+  db.query(sqlLogin, [email], (err, result) => {
     if (err) {
       res.send({ err: err });
       return;
@@ -102,6 +219,8 @@ app.post("/api/login", (req, res) => {
           let user = {
             id: result[0].id,
             name: result[0].name,
+            email: result[0].email,
+            role: result[0].role,
           };
           const token = generateAccessToken(user);
 

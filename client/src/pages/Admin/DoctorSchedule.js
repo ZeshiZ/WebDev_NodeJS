@@ -102,7 +102,7 @@ const DoctorSchedule = () => {
       .catch((err) => {
         alert(err);
       });
-  }, []);
+  }, [id]);
 
   const submit = () => {
     let data = {

@@ -35,24 +35,20 @@ const ScheduleAppointment = () => {
           const dates = [
             ...new Set(
               res.data.map((item) =>
-                moment(item.schedule_date).format("yyyy-MM-DD")
+                moment(item.schedule_date).format("YYYY-MM-DD")
               )
             ),
           ];
 
           const data = dates.map((item) => ({
-            schedule: new Date(item),
+            schedule: item,
             available:
               res.data.filter(
-                (x) => item === moment(x.schedule_date).format("yyyy-MM-DD")
+                (x) => item === moment(x.schedule_date).format("YYYY-MM-DD") && x.available.data[0]
               )?.length || 0,
           }));
 
-          console.log(data);
-
           setAppointmentDates(data);
-
-          console.log(appointmentDates);
         })
         .catch((err) => {
           alert(err);

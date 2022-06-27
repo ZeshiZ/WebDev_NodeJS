@@ -1,5 +1,6 @@
 import { useState } from "react";
 import * as dateFns from "date-fns";
+import moment from "moment";
 
 import "./Calendar.css";
 
@@ -31,13 +32,13 @@ const Calendar = ({ bookedDates, onSelected }) => {
 
   const isBooked = (date) => {
     return bookedDates?.some((bookedDate) =>
-      dateFns.isSameDay(date, bookedDate.schedule)
+      dateFns.format(date, 'yyyy-MM-dd') === bookedDate.schedule
     );
   };
 
   const getAvailable = (date) => {
     const booking = bookedDates?.find((bookedDate) =>
-      dateFns.isSameDay(date, bookedDate.schedule)
+      date === bookedDate.schedule
     );
 
     return !booking ? 0 : booking.available;
@@ -110,8 +111,6 @@ const Calendar = ({ bookedDates, onSelected }) => {
         formattedDate = dateFns.format(day, dateFormat);
         const cloneDay = dateFns.format(day, "yyyy-MM-dd");
 
-        console.log(selected);
-
         days.push(
           <div
             className={`col cell ${
@@ -128,7 +127,7 @@ const Calendar = ({ bookedDates, onSelected }) => {
             <span className="number" onClick={() => selectedHandler(cloneDay)}>
               {formattedDate}
             </span>
-            <span className="bg">{`${getAvailable(day)} available`}</span>
+            <span className="bg">{`${getAvailable(cloneDay)} available`}</span>
           </div>
         );
         day = dateFns.addDays(day, 1);

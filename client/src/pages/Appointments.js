@@ -3,16 +3,6 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-const appointments = [
-  { id: 1, scheduleDate: new Date(), reason: "test reason", note: "test note" },
-  {
-    id: 2,
-    scheduleDate: new Date("06/18/2022 09:30 PM"),
-    reason: "test reason",
-    note: "test note",
-  },
-];
-
 const Appointments = () => {
   const [appointments, setAppointments] = useState([]);
 
