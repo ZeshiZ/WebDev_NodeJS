@@ -111,3 +111,10 @@ To Do
 - Admin doctor scheduling
 Difficulties
 - Automatic checking of time
+
+Zeshi
+Done
+- Server-side heroku hosting
+- Amazon RDS cloud database
+Difficulties
+- Client-side heroku hosting due to peer dependency version conflicts of libraries
