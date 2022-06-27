@@ -1,32 +1,87 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import jwt from "jwt-decode";
 
-const Layout = ({ user, signedIn, onLogout}) => {
+const Layout = () => {
+  const [user, setUser] = useState({});
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = sessionStorage.getItem("token");
+    const currentUser = !token ? {} : jwt(token);
+    setUser(currentUser);
+    window.addEventListener("storage", storageEventHandler, false);
+
+    if (!token) {
+      navigate("/login");
+    }
+  }, []);
+
+  function storageEventHandler() {
+    const token = sessionStorage.getItem("token");
+    const currentUser = !token ? {} : jwt(token);
+    setUser(currentUser);
+  }
+
+  const logout = () => {
+    sessionStorage.removeItem("token");
+    navigate("/login");
+  };
+
   return (
     <div>
       <div className="header">
         <h1>The Clinic</h1>
-        <nav>
-          <ul>
-            <li signedIn={{ cursor: 'pointer' }}>
-              <NavLink to="/">Home</NavLink>
-            </li>
-            <li>
-              <ul>
-                {signedIn && <li>Hello {user.name}!</li>}
-                {signedIn && (<li
-                  style={{ cursor: 'pointer'}}
-                  onClick={() => onLogout(false, {})}
-                  >Logout
-                  </li>
-                )}
-              </ul>
-            </li>
-          </ul>
-        </nav>
+        {user?.role === "patient" && (
+          <nav>
+            <ul>
+              <li>
+                <NavLink to="/">Home</NavLink>
+              </li>
+              <li style={{ cursor: "pointer" }} onClick={logout}>
+                Logout
+              </li>
+            </ul>
+          </nav>
+        )}
+        {user?.role === "doctor" && (
+          <nav>
+            <ul>
+              <li>
+                <NavLink to="/">Home</NavLink>
+              </li>
+              <li style={{ cursor: "pointer" }} onClick={logout}>
+                Logout
+              </li>
+            </ul>
+          </nav>
+        )}
+        {user?.role === "admin" && (
+          <nav>
+            <ul>
+              <li>
+                <NavLink to="/">Home</NavLink>
+              </li>
+              <li>
+                {" "}
+                <NavLink to="/doctors">Doctors</NavLink>
+              </li>
+              <li>
+                <NavLink to="/customers">Customers</NavLink>
+              </li>
+              <li>
+                <NavLink to="/accounts">Accounts</NavLink>
+              </li>
+              <li style={{ cursor: "pointer" }} onClick={logout}>
+                Logout
+              </li>
+            </ul>
+          </nav>
+        )}
       </div>
-      <main>
+      <div className="wrapper">
         <Outlet />
-      </main>
+      </div>
     </div>
   );
 };
