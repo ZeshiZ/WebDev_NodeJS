@@ -1,29 +1,42 @@
-import React from "react";
 import moment from "moment";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 const appointments = [
-  { id: 1, 
-    scheduleDate: new Date("06/29/2022 08:30 AM"), 
-    doctor: "Math D. Hatter",
-    reason: "test reason", 
-    note: "test note" },
+  { id: 1, scheduleDate: new Date(), reason: "test reason", note: "test note" },
   {
     id: 2,
-    scheduleDate: new Date("06/18/2022 09:30 AM"),
-    doctor: "Michael Green",
+    scheduleDate: new Date("06/18/2022 09:30 PM"),
     reason: "test reason",
     note: "test note",
   },
 ];
 
-function Appointments() {
-  const navigate = useNavigate();
+const Appointments = () => {
+  const [appointments, setAppointments] = useState([]);
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:3001/api/appointments")
+      .then((res) => {
+        setAppointments(res.data);
+      })
+      .catch((err) => {
+        alert(err);
+      });
+  }, []);
 
   return (
     <>
       <div className="end">
-        <button className="btn-appointment" onClick={() => navigate("/book-appointment")}>Book Appointment</button>
+        <Link
+          to="/appointments/book"
+          className="btn"
+          style={{ maxWidth: "120px", display: "inline-block" }}
+        >
+          Book Appointment
+        </Link>
       </div>
 
       <h2 className="title center">Appointment History</h2>
@@ -31,18 +44,18 @@ function Appointments() {
       {appointments.map((appointment) => (
         <div className="container">
           <div key={appointment.id}>
-            <div className="date">{`${moment(appointment.scheduleDate).format(
+            <div className="date">{`${moment(appointment.schedule_date).format(
               "MMMM D, yyyy"
-            )} at ${moment(appointment.scheduleDate).format("h:mm A")}`}</div>
+            )} at ${moment(appointment.schedule_date).format("h:mm A")}`}</div>
             <div className="content">
-            <p>
-                <b>Doctor:</b> {appointment.doctor}
+              <p>
+                <b>Doctor:</b> {appointment.name}
               </p>
               <p>
                 <b>Reason:</b> {appointment.reason}
               </p>
               <p>
-                <b>Notes:</b> {appointment.note}
+                <b>Notes:</b> {appointment.notes}
               </p>
             </div>
           </div>
