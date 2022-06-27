@@ -2,17 +2,16 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const Doctors = () => {
-  const [doctors, setDoctors] = useState([]);
+const Patients = () => {
+  const [accounts, setAccounts] = useState([]);
 
   const navigate = useNavigate();
 
   useEffect(() => {
     axios
-      .get("http://localhost:3001/api/users/doctor")
+      .get("http://localhost:3001/api/users/patient")
       .then((res) => {
-        setDoctors(res.data);
-        console.log(res);
+        setAccounts(res.data);
       })
       .catch((err) => {
         alert(err);
@@ -22,12 +21,12 @@ const Doctors = () => {
   return (
     <>
       <div className="end">
-        <button className="btn" onClick={() => navigate("/doctors/add")}>
-          Add Doctor
+        <button className="btn" onClick={() => navigate("/customers/add")}>
+          Add Customer
         </button>
       </div>
 
-      <h1 className="title center">Doctor List</h1>
+      <h1 className="title center">Customer List</h1>
 
       <div className="card w-800 m-auto">
         <table className="table">
@@ -39,24 +38,24 @@ const Doctors = () => {
             </tr>
           </thead>
           <tbody>
-            {doctors?.length === 0 && (
+            {accounts?.length === 0 && (
               <tr>
                 <th colspan="3" className="center">
                   No records found.
                 </th>
               </tr>
             )}
-            {doctors &&
-              doctors.map((doctor) => (
+            {accounts &&
+              accounts.map((account) => (
                 <tr>
-                  <th scope="row">{doctor.name}</th>
-                  <td>{doctor.email}</td>
+                  <th scope="row">{account.name}</th>
+                  <td>{account.email}</td>
                   <td>
                     <button
                       className="action"
-                      onClick={() => navigate(`/doctors/${doctor.id}/schedule`)}
+                      onClick={() => navigate(`/customer/${account.id}`)}
                     >
-                      Schedule
+                      Edit
                     </button>
                   </td>
                 </tr>
@@ -68,4 +67,4 @@ const Doctors = () => {
   );
 };
 
-export default Doctors;
+export default Patients;
