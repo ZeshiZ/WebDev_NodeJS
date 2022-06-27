@@ -22,7 +22,7 @@ const db = mysql.createPool({
 
 app.use(
   cors({
-    origin: ["https://theclinic1-client.herokuapp.com/"],
+    origin: ["http://localhost:3000"],
     methods: ["GET", "POST", "PUT"],
     credentials: true,
   })
